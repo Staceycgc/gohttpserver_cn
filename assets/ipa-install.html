@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title id="page-title">[[.Name]] 安装</title>
+  <meta http-equiv="Content-Type" content="text/HTML; charset=utf-8">
+  <meta content="target-densitydpi=device-dpi,width=640" name="viewport" id="viewport">
+  <link rel="shortcut icon" type="image/png" href="/-/assets/favicon.png" />
+  <script type="text/javascript" src="/-/assets/js/ua-parser.min.js"></script>
+  <style>
+    #wechat {
+      position: relative;
+      width: 640px;
+      margin: 0 auto;
+      background: #fff;
+      overflow: hidden;
+      min-height: 777px;
+    }
+
+    #lang-switch {
+      margin: 12px;
+      text-align: right;
+      font-family: sans-serif;
+      font-size: 14px;
+    }
+
+    #lang-switch a {
+      color: #337ab7;
+      text-decoration: none;
+      margin-left: 8px;
+    }
+  </style>
+  <script type="text/javascript">
+    var LANG_STORAGE_KEY = "gohttpserver.lang";
+    var DEFAULT_LANG = "zh";
+    var I18N = {
+      zh: {
+        title_suffix: "安装",
+        browser_message: "这是 IPA 安装页面，请使用 iPhone 打开该链接。",
+        safari_prefix: "如果安装没有自动开始，请点击",
+        safari_link: "这里",
+        android_message: "这是 IPA 安装页面，不适用于 Android。",
+        lang_zh: "中文",
+        lang_en: "EN"
+      },
+      en: {
+        title_suffix: "install",
+        browser_message: "This is IPA install page, you should open this link with your iPhone.",
+        safari_prefix: "If install not started soon, click",
+        safari_link: "here",
+        android_message: "This is IPA install page, not for android.",
+        lang_zh: "中文",
+        lang_en: "EN"
+      }
+    };
+
+    function normalizeLang(lang) {
+      if (!lang) {
+        return DEFAULT_LANG;
+      }
+      var value = String(lang).toLowerCase();
+      if (value.indexOf("zh") === 0) {
+        return "zh";
+      }
+      if (value.indexOf("en") === 0) {
+        return "en";
+      }
+      return DEFAULT_LANG;
+    }
+
+    function getLang() {
+      try {
+        return normalizeLang(window.localStorage.getItem(LANG_STORAGE_KEY) || DEFAULT_LANG);
+      } catch (e) {
+        return DEFAULT_LANG;
+      }
+    }
+
+    function setLang(lang) {
+      var normalized = normalizeLang(lang);
+      try {
+        window.localStorage.setItem(LANG_STORAGE_KEY, normalized);
+      } catch (e) {
+      }
+      return normalized;
+    }
+
+    function t(key) {
+      var lang = getLang();
+      var pack = I18N[lang] || I18N.zh;
+      if (pack[key] !== undefined) {
+        return pack[key];
+      }
+      return (I18N.en[key] !== undefined) ? I18N.en[key] : key;
+    }
+
+    function updateLangSwitcher(lang) {
+      var zhNode = document.getElementById("lang-zh");
+      var enNode = document.getElementById("lang-en");
+      zhNode.style.fontWeight = lang === "zh" ? "bold" : "normal";
+      enNode.style.fontWeight = lang === "en" ? "bold" : "normal";
+    }
+
+    function renderTexts() {
+      var lang = getLang();
+      document.title = "[[.Name]] " + t("title_suffix");
+      document.getElementById("browser").textContent = t("browser_message");
+      document.getElementById("safari-prefix").textContent = t("safari_prefix") + " ";
+      document.getElementById("safari-link-text").textContent = t("safari_link");
+      document.getElementById("android").textContent = t("android_message");
+      document.getElementById("lang-zh").textContent = t("lang_zh");
+      document.getElementById("lang-en").textContent = t("lang_en");
+      updateLangSwitcher(lang);
+    }
+
+    function switchLang(lang) {
+      setLang(lang);
+      renderTexts();
+      return false;
+    }
+
+    function showById(name) {
+      document.getElementById(name).style.display = 'block';
+    }
+
+    function hideAll() {
+      document.getElementById("browser").style.display = "none";
+      document.getElementById("safari").style.display = "none";
+      document.getElementById("android").style.display = "none";
+      document.getElementById("wechat").style.display = "none";
+    }
+
+    function checkBrowerAndDownload() {
+      var parser = new UAParser();
+      var os_info = parser.getOS();
+      var plistLink = "[[.PlistLink]]";
+      var ipaInstallLink = 'itms-services://?action=download-manifest&url=' + plistLink;
+      document.getElementById('itms-link').href = ipaInstallLink;
+
+      hideAll();
+      // wechat supports AppStore link now.
+      if (navigator.userAgent.toLowerCase().match(/MicroMessenger/i) == "micromessenger") {
+        showById('safari');
+        location.href = ipaInstallLink;
+        return;
+      }
+      if (os_info.name == 'Android') {
+        showById("android");
+        return;
+      }
+      if (os_info.name == 'iOS') {
+        showById('safari');
+        location.href = ipaInstallLink;
+        return;
+      }
+      showById('browser');
+    }
+  </script>
+</head>
+
+<body>
+  <div id="lang-switch">
+    <a id="lang-zh" href="#" onclick="return switchLang('zh')">中文</a>
+    <a id="lang-en" href="#" onclick="return switchLang('en')">EN</a>
+  </div>
+  <div id="wechat" style="display: none">
+    <img style='width: 100%;position: relative;' src='/-/assets/imgs/wx.png' />
+  </div>
+  <div id="browser" style="display: none"></div>
+  <div id="safari" style="display: none">
+    <span id="safari-prefix"></span><a id="itms-link" href="#"><span id="safari-link-text"></span></a>
+  </div>
+  <div id="android" style="display: none"></div>
+  <script type="text/javascript">
+    renderTexts();
+    checkBrowerAndDownload();
+  </script>
+</body>
+
+</html>

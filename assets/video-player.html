@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="page-title">视频播放器 - [[.FileName]]</title>
+    <style>
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            background-color: #000;
+            font-family: sans-serif;
+        }
+
+        .video-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+        }
+
+        video {
+            max-width: 100%;
+            max-height: 100%;
+        }
+
+        #lang-switch {
+            position: fixed;
+            top: 12px;
+            right: 14px;
+            z-index: 10;
+        }
+
+        #lang-switch a {
+            color: #ddd;
+            text-decoration: none;
+            margin-left: 10px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="lang-switch">
+        <a id="lang-zh" href="#" onclick="return switchLang('zh')">中文</a>
+        <a id="lang-en" href="#" onclick="return switchLang('en')">EN</a>
+    </div>
+    <div class="video-container">
+        <video id="videoPlayer" controls autoplay>
+            <source src="[[.VideoURL]]" type="video/[[.Extension]]">
+            <span id="video-fallback">你的浏览器不支持 video 标签。</span>
+        </video>
+    </div>
+
+    <script>
+        var LANG_STORAGE_KEY = "gohttpserver.lang";
+        var DEFAULT_LANG = "zh";
+        var FILE_NAME = "[[.FileName]]";
+        var I18N = {
+            zh: {
+                title_prefix: "视频播放器",
+                not_supported: "你的浏览器不支持 video 标签。",
+                lang_zh: "中文",
+                lang_en: "EN"
+            },
+            en: {
+                title_prefix: "Video Player",
+                not_supported: "Your browser does not support the video tag.",
+                lang_zh: "中文",
+                lang_en: "EN"
+            }
+        };
+
+        function normalizeLang(lang) {
+            if (!lang) {
+                return DEFAULT_LANG;
+            }
+            var value = String(lang).toLowerCase();
+            if (value.indexOf("zh") === 0) {
+                return "zh";
+            }
+            if (value.indexOf("en") === 0) {
+                return "en";
+            }
+            return DEFAULT_LANG;
+        }
+
+        function getLang() {
+            try {
+                return normalizeLang(window.localStorage.getItem(LANG_STORAGE_KEY) || DEFAULT_LANG);
+            } catch (e) {
+                return DEFAULT_LANG;
+            }
+        }
+
+        function setLang(lang) {
+            var normalized = normalizeLang(lang);
+            try {
+                window.localStorage.setItem(LANG_STORAGE_KEY, normalized);
+            } catch (e) {
+            }
+            return normalized;
+        }
+
+        function t(key) {
+            var lang = getLang();
+            var pack = I18N[lang] || I18N.zh;
+            if (pack[key] !== undefined) {
+                return pack[key];
+            }
+            return (I18N.en[key] !== undefined) ? I18N.en[key] : key;
+        }
+
+        function updateLangSwitcher(lang) {
+            var zhNode = document.getElementById("lang-zh");
+            var enNode = document.getElementById("lang-en");
+            zhNode.style.fontWeight = lang === "zh" ? "bold" : "normal";
+            enNode.style.fontWeight = lang === "en" ? "bold" : "normal";
+        }
+
+        function renderTexts() {
+            var lang = getLang();
+            document.documentElement.lang = lang === "zh" ? "zh-CN" : "en";
+            document.title = t("title_prefix") + " - " + FILE_NAME;
+            document.getElementById("video-fallback").textContent = t("not_supported");
+            document.getElementById("lang-zh").textContent = t("lang_zh");
+            document.getElementById("lang-en").textContent = t("lang_en");
+            updateLangSwitcher(lang);
+        }
+
+        function switchLang(lang) {
+            setLang(lang);
+            renderTexts();
+            return false;
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            renderTexts();
+            var video = document.getElementById('videoPlayer');
+            video.focus();
+        });
+    </script>
+</body>
+
+</html>
