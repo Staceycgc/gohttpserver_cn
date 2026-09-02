@@ -788,6 +788,17 @@ var (
 )
 
 func init() {
+	// 强制注册静态资源的 MIME 类型，覆盖 Linux 上 /etc/mime.types 可能存在的
+	// 缺失或错误映射（例如 .css 被映射为 text/plain）。否则浏览器会因严格 MIME
+	// 校验拒绝应用样式表，导致页面排版异常。
+	mime.AddExtensionType(".css", "text/css; charset=utf-8")
+	mime.AddExtensionType(".js", "text/javascript; charset=utf-8")
+	mime.AddExtensionType(".svg", "image/svg+xml")
+	mime.AddExtensionType(".woff", "font/woff")
+	mime.AddExtensionType(".woff2", "font/woff2")
+	mime.AddExtensionType(".ttf", "font/ttf")
+	mime.AddExtensionType(".eot", "application/vnd.ms-fontobject")
+
 	funcMap = template.FuncMap{
 		"title": strings.Title,
 		"urlhash": func(path string) string {
